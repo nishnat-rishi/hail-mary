@@ -42,6 +42,7 @@ local function construct_animation_frames(old, curr, num_frames, fn_bag) -- n is
 end
 
 function anim:move(params) -- {id, obj, props, seconds, fn}
+  params.id = params.id or params.obj
   params.props = params.props or params.to
   params.seconds, params.fn = 
     params.seconds or 0.5, params.fn or anim.fn.SQRT
@@ -75,11 +76,7 @@ function anim:move(params) -- {id, obj, props, seconds, fn}
     )
   end
 
-  if params.id then
-    self._pending[params.id] = bag
-  else
-    table.insert(self._pending, bag)
-  end
+  self._pending[params.id] = bag
 end
 
 function anim:update(dt)
@@ -89,8 +86,8 @@ function anim:update(dt)
     if bag.curr_frame <= bag.last_frame then
       for k, frames in pairs(bag.frames) do
         bag.obj.d_props[k] = frames[bag.curr_frame]
-        if bag.obj.while_animating then 
-          bag.obj:while_animating() 
+        if bag.obj.while_animating then -- THIS SHOULD ... *1
+          bag.obj:while_animating()
         end
       end
     else
@@ -101,6 +98,7 @@ function anim:update(dt)
   end
   for id, bag in pairs(self._pending) do
     self._change_list[id] = bag
+    self._pending[id] = nil
   end
 end
 
@@ -113,3 +111,25 @@ function anim:add_fn(name, fn, input_init, input_end)
 end
 
 return anim
+
+
+-- ADDITIONAL COMMENTS
+
+--[[
+  1. THIS SHOULD BE CHANGED!! VERY INCONSISTENTLY PLACED!!
+     Why is it that the 'on_end' handler is passed to 
+     anim:move({...}), but 'while_animating' handler is an 
+     object property?? Very bad!!
+
+     Make anim:move be something like:
+     anim:move({obj, to, [id, on_end, while_animating]}).
+
+     We are anyway not updating this module in the 'UNO' 
+     project. BUT THAT PROJECT HAS A MEMORY LEAK WHICH I
+     FIXED HERE OH MY GOD. But if we change the functioning
+     of the 'while_animating' handler, WE WILL BE REQUIRED
+     TO FIX ALL INSTANCES OF IT IN CODE OH MY GOD. Ok no need
+     to hyperventilate, how many instances could there possibly 
+     be?
+
+]]
