@@ -18,17 +18,29 @@ function utility.table_string_nr(t)
   return s
 end
 
-function table_string(t)
+function utility.table_string_dumb(t)
   local s = '{'
-  for k, item in t do
-      if type(item) == 'table' then
-          s = s .. table_string(item)
-      else
-          s = s .. string.format('%s', item)
-      end
-      if next(t, k) then
-          s = s .. ', '
-      end
+  for k, item in pairs(t) do
+      s = s .. string.format('%s', item)
+    if next(t, k) then
+        s = s .. ', '
+    end
+  end
+  s = s .. '}'
+  return s
+end
+
+local function table_string(t)
+  local s = '{'
+  for k, item in pairs(t) do
+    if type(item) == 'table' then
+      s = s .. table_string(item)
+    else
+      s = s .. string.format('%s', item)
+    end
+    if next(t, k) then
+      s = s .. ', '
+    end
   end
   s = s .. '}'
   return s
