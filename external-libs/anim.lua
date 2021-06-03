@@ -15,8 +15,8 @@ local function lerp(x, a, b, af, bf)  -- linear interpolation
 end
 
 local function calc_num_frames(fps, seconds)
-  return math.floor(fps * seconds) + 1 -- program executes 60 
-  -- frames a second.
+  return math.floor(fps * seconds) + 1 -- + 1 for the case
+  -- where math.floor(...) returns 0
 end
 
 local function construct_animation_frames(old, curr, num_frames, fn_bag) -- n is the number of frames
