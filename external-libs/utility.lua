@@ -47,4 +47,33 @@ local function table_string(t)
 end
 utility.table_string = table_string
 
+function utility.collides(pointer, d_props, scale) 
+  -- uses scale as well hopefully,
+  -- rotate is too hard though :( (can be done with line formulas)
+  local object = d_props
+  scale = scale or 1
+  local x, y = pointer.x ,pointer.y
+  local obj = {
+    x = object.x + ((1 - scale) * object.width) / 2,
+    y = object.y + ((1 - scale) * object.height) / 2,
+    width = scale * object.width,
+    height = scale * object.height
+  }
+  
+  return (x >= obj.x and x <= obj.x + obj.width) and
+    (y >= obj.y and y <= obj.y + obj.height)
+end
+
+local function sign(value)
+  return value >= 0 and 1 or -1
+end
+
+function utility.diminish(value, amount)
+  local ret_val = math.abs(value) - amount
+
+  return ret_val < 0 and
+    0 or
+    sign(value) * ret_val
+end
+
 return utility

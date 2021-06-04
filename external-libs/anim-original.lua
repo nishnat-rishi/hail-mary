@@ -61,7 +61,7 @@ function anim:move(params) -- {id, obj, props, seconds, fn}
 
   for prop_name, prop_val in pairs(params.props) do
     assert(
-      params.obj[prop_name] ~= nil, 
+      params.obj.d_props[prop_name] ~= nil, 
       string.format(
         'ANIM_ERROR: Drawing property \'%s\' not initialized!', 
         prop_name
@@ -69,7 +69,7 @@ function anim:move(params) -- {id, obj, props, seconds, fn}
     )
 
     bag.frames[prop_name] = construct_animation_frames(
-      params.obj[prop_name],
+      params.obj.d_props[prop_name],
       prop_val,
       bag.last_frame,
       params.fn
@@ -85,7 +85,7 @@ function anim:update(dt)
     bag.curr_frame = bag.curr_frame + 1
     if bag.curr_frame <= bag.last_frame then
       for k, frames in pairs(bag.frames) do
-        bag.obj[k] = frames[bag.curr_frame]
+        bag.obj.d_props[k] = frames[bag.curr_frame]
         if bag.obj.while_animating then -- THIS SHOULD ... *1
           bag.obj:while_animating()
         end
