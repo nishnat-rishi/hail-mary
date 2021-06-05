@@ -7,6 +7,7 @@ local anim = {
   },
   _pending = {},
   _change_list = {},
+  _purge_list = {},
   _fps = 60
 }
 
@@ -99,6 +100,17 @@ function anim:update(dt)
   for id, bag in pairs(self._pending) do
     self._change_list[id] = bag
     self._pending[id] = nil
+  end
+
+  for id in pairs(self._purge_list) do
+    self._change_list[id] = nil
+    self._purge_list[id] = nil
+  end
+end
+
+function anim:purge(obj)
+  if self._change_list[obj] then
+    self._purge_list[obj] = true
   end
 end
 

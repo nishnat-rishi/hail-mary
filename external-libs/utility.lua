@@ -64,6 +64,21 @@ function utility.collides(pointer, d_props, scale)
     (y >= obj.y and y <= obj.y + obj.height)
 end
 
+function utility.collides_d(pointer, d_props, scale) 
+  local object = d_props
+  scale = scale or 1
+  local x, y = pointer.x ,pointer.y
+  local obj = {
+    x = object.d.x + ((1 - scale) * object.width) / 2,
+    y = object.d.y + ((1 - scale) * object.height) / 2,
+    width = scale * object.width,
+    height = scale * object.height
+  }
+  
+  return (x >= obj.x and x <= obj.x + obj.width) and
+    (y >= obj.y and y <= obj.y + obj.height)
+end
+
 local function sign(value)
   return value >= 0 and 1 or -1
 end
