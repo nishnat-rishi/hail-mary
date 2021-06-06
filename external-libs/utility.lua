@@ -79,6 +79,18 @@ function utility.collides_d(pointer, d_props, scale)
     (y >= obj.y and y <= obj.y + obj.height)
 end
 
+function utility.collides_d_circle(pointer, d_props, scale) 
+  local object = d_props
+  scale = scale or 1
+  local x, y = pointer.x ,pointer.y
+  local obj = {
+    x = object.d.x, y = object.d.y,
+    r = scale * object.r
+  }
+  
+  return (pointer.x - obj.x)^2 + (pointer.y - obj.y)^2 <= obj.r^2
+end
+
 local function sign(value)
   return value >= 0 and 1 or -1
 end

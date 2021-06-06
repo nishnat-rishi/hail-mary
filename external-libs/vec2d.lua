@@ -43,6 +43,27 @@ function vec2d.s_mul(v, scalar)
   )
 end
 
+function vec2d.mag(v)
+  return math.sqrt(v.x^2 + v.y^2)
+end
+
+function vec2d.unit(v)
+  local mag = v:mag()
+  return setmetatable(
+    {x = v.x / mag, y = v.y / mag},
+    vec2d
+  )
+end
+
+function vec2d.clamp(v, v_max)
+  if math.abs(v.x) >= math.abs(v_max.x) then
+    v.x = v.x * v_max.x / math.abs(v.x)
+  end
+  if math.abs(v.y) >= math.abs(v_max.y) then
+    v.y = v.y * v_max.y / math.abs(v.y)
+  end
+end
+
 function vec2d.__eq(v1, v2)
   return v1.x == v2.x and v1.y == v2.y
 end
@@ -58,5 +79,15 @@ function vec2d.near(v1, v2, threshold)
 end
 
 vec2d.zero = vec2d()
+vec2d.i = vec2d({x = 1, y = 0})
+vec2d.j = vec2d({x = 0, y = 1})
+
+-- Testing area
+
+-- local v = vec2d({x = 20, y = 40})
+-- local v_unit  = v:unit()
+-- local unit_mag = v_unit:mag()
+
+--
 
 return vec2d
