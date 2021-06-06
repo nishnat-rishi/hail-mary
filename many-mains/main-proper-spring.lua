@@ -8,6 +8,8 @@ function simulation_reset()
   a, d = vec2d(), vec2d()
   v = vec2d()
   dv = vec2d()
+
+  init_vel = vec2d()
 end
 
 function love.load()
@@ -31,6 +33,7 @@ function love.load()
   }
 
   on_component = false
+  before_simulate = false
   simulate = false
 
   m, k = 0.08, 20
@@ -41,9 +44,17 @@ end
 
 function love.update(dt)
   message = string.format(
-      'simulate: %s\nconsecutive_a_zero: %f\na: %s\nv: %s\nd: %s',
-      simulate, consecutive_a_zero, a, v, d
-    )
+    'simulate: %s\nconsecutive_a_zero: %f\na: %s\nv: %s\nd: %s',
+    simulate, consecutive_a_zero, a, v, d
+  )
+
+  if before_simulate then
+    before_simulate = false
+    init_vel:update(init_vel:s_mul(1 / dt))
+    init_vel:clamp{x = 200, y = 200}
+    v:update(init_vel)
+    simulate = true
+  end
 
   if simulate then
     if consecutive_a_zero >= 0.1 then
@@ -104,13 +115,14 @@ function love.mousemoved(x, y, dx, dy)
     component.d_props.d:update(
       component.d_props.d + delta
     )
+    init_vel:update(delta)
   end
 end
 
 function love.mousereleased(x, y)
   if on_component then
-    simulate = true
+    on_component = false
+    before_simulate = true
     t = 0
   end
-  on_component = false
 end

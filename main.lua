@@ -2,6 +2,22 @@
 
 local u = require('external-libs.utility')
 local vec2d = require('external-libs.vec2d')
+local timer = require('external-libs.timer')
+
+function reset()
+  G, M, m, r = 10000, 10, 10, vec2d()
+  dv = vec2d()
+  v = vec2d()
+  init_vel = vec2d()
+
+  before_simulate = false
+  simulate = false
+  on_component = false
+
+  component.d = vec2d{x = origin.x, y = origin.y}
+
+  points = {}
+end
 
 function love.load()
 
@@ -12,10 +28,10 @@ function love.load()
     y = love.graphics.getHeight()
   }
 
-  origin = vec2d({
+  origin = vec2d{
     x = dims.x / 3,
     y = dims.y / 3
-  })
+  }
 
   -- component = {
   --   d = vec2d{x = origin.x, y = origin.y},
@@ -32,6 +48,8 @@ function love.load()
 end
 
 function love.update(dt)
+  timer:update(dt)
+
   message = string.format(
     'simulate: %s\nr: %s\ndv: %s\nv: %s\ninit_vel: %s', 
     simulate,
@@ -44,9 +62,18 @@ function love.update(dt)
   if before_simulate then
     before_simulate = false
     init_vel:update(init_vel:s_mul(1 / dt)) -- complete the init_vel update
-    init_vel:clamp{x = 200, y = 200}
+    init_vel:clamp{x = 500, y = 500}
     v:update(init_vel)
     simulate = true
+    timer:register{
+      id = 'ticker',
+      duration = 0.05,
+      callback = function() 
+        points[#points + 1], points[#points + 2] =
+          component.d.x, component.d.y
+      end,
+      periodic = true
+    }
   end
 
   if simulate then
@@ -59,6 +86,8 @@ end
 
 function love.draw()
   love.graphics.print(message, 100, 100)
+  
+  love.graphics.points(points)
 
   love.graphics.circle('fill', origin.x, origin.y, 4)
 
@@ -74,20 +103,8 @@ function love.draw()
   )
 end
 
-function reset()
-  G, M, m, r = 10000, 10, 10, vec2d()
-  dv = vec2d()
-  v = vec2d()
-  init_vel = vec2d()
-
-  before_simulate = false
-  simulate = false
-  on_component = false
-
-  component.d = vec2d{x = origin.x, y = origin.y}
-end
-
 function love.mousepressed(x, y)
+  timer:deregister('ticker')
   simulate = false
   on_component = u.collides_d_circle({x = x, y = y}, component)
 end
