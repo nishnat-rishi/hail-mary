@@ -45,6 +45,8 @@ function love.load()
   }
 
   reset()
+
+  love.graphics.setPointSize(2)
 end
 
 function love.update(dt)
