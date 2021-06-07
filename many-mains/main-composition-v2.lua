@@ -1,3 +1,5 @@
+-- main-composition-v2
+
 local u = require('external-libs.utility')
 local vec2d = require('external-libs.vec2d')
 
@@ -22,6 +24,7 @@ function love.load()
         width = 100,
         height = 100,
         rx = 4,
+        collides = false,
         -- color = { -- light blue
         --   r = 111 / 255,
         --   g = 175 / 255,
@@ -139,23 +142,27 @@ end
 
 function collision_check(pointer, node, origin)
   local pos = origin + node.d
-  node.on_component = u.collides_d(
-    pointer, 
-    {
-      d = pos, width = node.width, height = node.height
-    }
-  )
+  if node.collides ~= false then
+    node.on_component = u.collides_d(
+      pointer, 
+      {
+        d = pos, width = node.width, height = node.height
+      }
+    )
 
-  local children_collide = false
+    local children_collide = false
 
-  if node.children then
-    for _, child_node in pairs(node.children) do
-      children_collide = children_collide or
-        collision_check(pointer, child_node, pos)
+    if node.children then
+      for _, child_node in pairs(node.children) do
+        children_collide = children_collide or
+          collision_check(pointer, child_node, pos)
+      end
     end
-  end
 
-  return node.on_component or children_collide
+    return node.on_component or children_collide
+  else 
+    return false
+  end
 end
 
 function parental_clamp(node)
