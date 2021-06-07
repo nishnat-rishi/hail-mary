@@ -34,9 +34,9 @@ local function table_string(t)
   local s = '{'
   for k, item in pairs(t) do
     if type(item) == 'table' then
-      s = s .. table_string(item)
+      s = s .. string.format('%s=%s', k, table_string(item))
     else
-      s = s .. string.format('%s', item)
+      s = s .. string.format('%s=%s', k, item)
     end
     if next(t, k) then
       s = s .. ', '

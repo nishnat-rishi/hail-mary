@@ -1,135 +1,67 @@
--- gravity simulation
-
-local u = require('external-libs.utility')
-local vec2d = require('external-libs.vec2d')
-local timer = require('external-libs.timer')
-
-function reset()
-  G, M, m, r = 10000, 10, 10, vec2d()
-  dv = vec2d()
-  v = vec2d()
-  init_vel = vec2d()
-
-  before_simulate = false
-  simulate = false
-  on_component = false
-
-  component.d = vec2d{x = origin.x, y = origin.y}
-
-  points = {}
-end
-
 function love.load()
-
-  message = ''
-
-  dims = {
-    x = love.graphics.getWidth(),
-    y = love.graphics.getHeight()
+  component_root = {
+    x = function (self) return 10 end,
+    y = function (self) return 20 end,
+    width = function (self) return 300 end,
+    height = function (self) return 400 end,
+    rx = function (self) return 4 end,
+    children = {
+      {
+        x = function(self) return self.parent:x() end,
+        y = function(self) return self.parent:y() + 10 end,
+        width = function(self) return self.parent:width() + 20 end, 
+        height = function (self) return 10 end,
+        rx = function (self) return 4 end
+      },
+      {
+        x = function(self) return self.parent:x() + 20 end,
+        y = function(self) return self.parent:y() end,
+        width = function(self) return self.parent:width() / 3 end, 
+        height = function (self) return 10 end,
+        rx = function (self) return 4 end,
+        children = {
+          {
+            x = function (self) return self.parent:x() + 20 end,
+            y = function (self) return self.parent:y() + 30 end,
+            width = function (self) return 400 end, 
+            height = function (self) return 20 end,
+            rx = function (self) return 4 end
+          }
+        }
+      },
+    }  
   }
 
-  origin = vec2d{
-    x = dims.x / 3,
-    y = dims.y / 3
-  }
-
-  -- component = {
-  --   d = vec2d{x = origin.x, y = origin.y},
-  --   width = 100, height = 50,
-  --   rx = 4, ry = 4
-  -- }
-
-  component = {
-    d = vec2d{x = origin.x, y = origin.y},
-    r = 20
-  }
-
-  reset()
-
-  love.graphics.setPointSize(2)
+  attach_parent(component_root)
 end
 
 function love.update(dt)
-  timer:update(dt)
-
-  message = string.format(
-    'simulate: %s\nr: %s\ndv: %s\nv: %s\ninit_vel: %s', 
-    simulate,
-    r,
-    dv,
-    v,
-    init_vel
-  )
-
-  if before_simulate then
-    before_simulate = false
-    init_vel:update(init_vel:s_mul(1 / dt)) -- complete the init_vel update
-    init_vel:clamp{x = 500, y = 500}
-    v:update(init_vel)
-    simulate = true
-    timer:register{
-      id = 'ticker',
-      duration = 0.05,
-      callback = function() 
-        points[#points + 1], points[#points + 2] =
-          component.d.x, component.d.y
-      end,
-      periodic = true
-    }
-  end
-
-  if simulate then
-    r:update(origin - component.d)
-    dv:update(r:unit():s_mul(G * M  * dt/ (r:mag())))
-    v:update(v + dv)
-    component.d:update(component.d + v:s_mul(dt))
-  end
 end
 
 function love.draw()
-  love.graphics.print(message, 100, 100)
-  
-  love.graphics.points(points)
+  tree_draw(component_root)
+end
 
-  love.graphics.circle('fill', origin.x, origin.y, 4)
+-----------------------
 
-  -- love.graphics.rectangle('fill',
-  --   component.d.x, component.d.y,
-  --   component.width, component.height,
-  --   component.rx, component.ry
-  -- )
-
-  love.graphics.circle('line',
-    component.d.x, component.d.y,
-    component.r
+function tree_draw(node)
+  love.graphics.rectangle('fill',
+    node:x(), node:y(),
+    node:width(), node:height(),
+    node:rx()
   )
-end
-
-function love.mousepressed(x, y)
-  timer:deregister('ticker')
-  simulate = false
-  on_component = u.collides_d_circle({x = x, y = y}, component)
-end
-
-function love.mousemoved(x, y, dx, dy)
-  local delta = vec2d{x = dx, y = dy}
-
-  if on_component then
-    component.d:update(component.d + delta)
-    r:update(origin - component.d)
-    init_vel:update(delta) -- incomplete init_vel update
+  if node.children then
+    for _, child_node in pairs(node.children) do
+      tree_draw(child_node)
+    end
   end
 end
 
-function love.mousereleased(x, y)
-  if on_component then
-    on_component = false
-    before_simulate = true
-  end
-end
-
-function love.keypressed(key)
-  if key == 'space' then
-    reset()
+function attach_parent(node)
+  if node.children then
+    for _, child in pairs(node.children) do
+      child.parent = node
+      attach_parent(child)
+    end
   end
 end

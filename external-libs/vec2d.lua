@@ -43,6 +43,24 @@ function vec2d.s_mul(v, scalar)
   )
 end
 
+function vec2d.apply(v, f)
+  return setmetatable(
+    {
+      x = v.x * f(math.abs(v.x)) / math.abs(v.x),
+      y = v.y * f(math.abs(v.y)) / math.abs(v.y)
+    },
+    vec2d
+  )
+end
+
+function vec2d.dist(v1, v2)
+  return math.sqrt((v1.x - v2.x)^2 + (v1.y + v2.y)^2)
+end
+
+function vec2d.copy_of(v)
+  return setmetatable({x=v.x, y=v.y}, vec2d)
+end
+
 function vec2d.mag(v)
   return math.sqrt(v.x^2 + v.y^2)
 end
