@@ -144,7 +144,7 @@ function collision_check(pointer, node, origin)
   local pos = origin + node.d
   if node.collides ~= false then
     node.on_component = u.collides_d(
-      pointer, 
+      pointer,
       {
         d = pos, width = node.width, height = node.height
       }
