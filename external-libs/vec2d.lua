@@ -74,10 +74,10 @@ function vec2d.unit(v)
 end
 
 function vec2d.clamp(v, v_max)
-  if math.abs(v.x) >= math.abs(v_max.x) then
+  if v_max.x and math.abs(v.x) >= math.abs(v_max.x) then
     v.x = v.x * v_max.x / math.abs(v.x)
   end
-  if math.abs(v.y) >= math.abs(v_max.y) then
+  if v_max.y and math.abs(v.y) >= math.abs(v_max.y) then
     v.y = v.y * v_max.y / math.abs(v.y)
   end
 end
@@ -91,9 +91,9 @@ function vec2d.update(v, v_updator)
   v.y = v_updator.y
 end
 
-function vec2d.near(v1, v2, threshold)
-  return math.abs(v1.x - v2.x) <= threshold and
-   math.abs(v1.y - v2.y) <= threshold
+function vec2d.near(v, v_thres)
+  return (v_thres.x and math.abs(v.x) <= v_thres.x or false) or
+   (v_thres.y and math.abs(v.y) <= v_thres.y or false)
 end
 
 vec2d.zero = vec2d()

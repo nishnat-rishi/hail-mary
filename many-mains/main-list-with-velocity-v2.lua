@@ -1,4 +1,3 @@
-local spring = require "external-libs.spring"
 -- redoing this for mouse, also removing anim from this!
 
 -- hear me out, trying to use the composition-v2 model to create the
@@ -21,20 +20,7 @@ local vec2d = require('external-libs.vec2d')
 function simulation_reset()
   init_vel = vec2d()
   v, dv = vec2d(), vec2d()
-  mouse_acc = vec2d()
-
-  spring_acc, r = vec2d(), vec2d()
-
-  consecutive_nearness = 0
-  simulate = false
-  underflow = false
-  t = 0
-
-  before_simulate = false
-  simulate = false
-
-  underflow, overflow = false, false
-
+  a = vec2d()
 end
 
 function love.load()
@@ -48,17 +34,12 @@ function love.load()
     width = 100,
     height = 510,
     rx = 0,
-    color = { -- blue
-      r = 66 / 255, 
-      g = 155 / 255, 
-      b = 245 / 255
+    color = {
+      r = 138 / 255,
+      g = 189 / 255,
+      b = 94 / 255,
+      a = 1,
     },
-    -- color = { -- green
-    --   r = 138 / 255,
-    --   g = 189 / 255,
-    --   b = 94 / 255,
-    --   a = 1,
-    -- },
     children = (
       function ()
         local children = {}
@@ -75,17 +56,12 @@ function love.load()
             height = item_props.height,
             rx = 2,
             collides = false,
-            color = { -- light blue
-              r = 117 / 255, 
-              g = 186 / 255, 
-              b = 255 / 255
+            color = {
+              r = 170 / 255, 
+              g = 232 / 255, 
+              b = 155 / 255,
+              a = 1,
             }
-            -- color = { -- light green
-            --   r = 170 / 255, 
-            --   g = 232 / 255, 
-            --   b = 155 / 255,
-            --   a = 1,
-            -- }
           }
           y = y + item_props.height + gap
         end
@@ -107,10 +83,9 @@ function love.load()
     height = component.height / 3
   }
 
-  k, m = 1000, 15
-  damping_coeff = 0.1
-
   on_component = false
+  before_simulate = false
+  simulate = false
 
   simulation_reset()
 
@@ -118,115 +93,42 @@ function love.load()
 end
 
 function love.update(dt)
-  message = string.format(
-    [[
-      on_component: %s
-      before_simulate: %s
-      simulate: %s
-      underflow: %s
-      overflow: %s
-      r: %s
-      spring_acc: %s
-      v: %s
-      dv: %s
-      component.d: %s
-      t: %f
-    ]], 
-    on_component,
-    before_simulate,
-    simulate, 
-    underflow, 
-    overflow, 
-    r, 
-    spring_acc, 
-    v, 
-    dv, 
-    component.d, 
-    t
-  )
+  message = string.format('%s\n%s', init_vel, v)
 
   if before_simulate then
     before_simulate = false
     init_vel:update(init_vel:s_mul(1 / dt))
     init_vel:clamp{y = 1000}
     v:update(init_vel)
-    mouse_acc:update(-init_vel)
+    a:update(-init_vel)
     simulate = true
   end
 
   if simulate then
-    local delta
+    dv:update(a:s_mul(dt))
+    v:update(v + dv)
 
-    if underflow then
-      -- spring stuff
-      r:update(component.d - scissor_props.d)
-      spring_acc:update(r:s_mul(-k / m))
-      dv:update(spring_acc:s_mul(dt))
-      t = t + dt
-      v:update((v + dv):s_mul(math.exp(-t * damping_coeff)))
+    local delta = v:s_mul(dt)
 
-      if v:near{y = 0.1} then
-        consecutive_nearness = consecutive_nearness + dt
-      end
+    local new_pos = component.d + delta
 
-      if consecutive_nearness >= 0.5 then
-        simulation_reset()
-      end
-
-      delta = v:s_mul(dt)
-
-    elseif overflow then
-      -- spring stuff
-      r:update{x = 0, y = (component.d.y + component.height) - (scissor_props.d.y + scissor_props.height)}
-      spring_acc:update(r:s_mul(-k / m))
-      dv:update(spring_acc:s_mul(dt))
-      t = t + dt
-      v:update((v + dv):s_mul(math.exp(-t * damping_coeff)))
-
-      if v:near{y = 0.1} then
-        consecutive_nearness = consecutive_nearness + dt
-      end
-
-      if consecutive_nearness >= 0.5 then
-        simulation_reset()
-      end
-
-      delta = v:s_mul(dt)
-
-    else
-      dv:update(mouse_acc:s_mul(dt))
-      v:update(v + dv)
-
-      delta = v:s_mul(dt)
-
-      -- stop when you touch the walls
-      local new_pos = component.d + delta
-
-      local scroll_offset = scissor_props.d.y - new_pos.y
-      local edge_delta = scissor_props.d.y - component.d.y
-      local scroll_limit = component.height - scissor_props.height
-      
-      if scroll_offset < 0 then
-        -- underflow = true
-        delta.y = edge_delta
-      elseif scroll_offset > scroll_limit then
-        -- overflow = true
-        delta.y = edge_delta - scroll_limit
-      else
-        -- underflow, overflow = false, false
-      end
-
-      if v:near{y = 10} then
-        v = vec2d()
-        simulate = false
-        t = 0
-      end
-
+    local scroll_offset = scissor_props.d.y - new_pos.y
+    local edge_delta = scissor_props.d.y - component.d.y
+    local scroll_limit = component.height - scissor_props.height
+    
+    if scroll_offset < 0 then
+      delta.y = edge_delta
+    elseif scroll_offset > scroll_limit then
+      delta.y = edge_delta - scroll_limit
     end
 
     component.d:update(
       component.d + delta
     )
+    if v:near{y = 10} then
+      v = vec2d()
+      simulate = false
+    end
   end
 end
 
@@ -269,19 +171,13 @@ function love.mousemoved(x, y, dx, dy)
     local new_pos = component.d + delta
 
     local scroll_offset = scissor_props.d.y - new_pos.y
-    -- local edge_delta = scissor_props.d.y - component.d.y
+    local edge_delta = scissor_props.d.y - component.d.y
     local scroll_limit = component.height - scissor_props.height
     
     if scroll_offset < 0 then
-      underflow = true
-      delta.y = delta.y * 0.3
-      -- delta.y = edge_delta
+      delta.y = edge_delta
     elseif scroll_offset > scroll_limit then
-      overflow = true
-      delta.y = delta. y * 0.3
-      -- delta.y = edge_delta - scroll_limit
-    else
-      underflow, overflow = false, false
+      delta.y = edge_delta - scroll_limit
     end
 
     component.d:update(

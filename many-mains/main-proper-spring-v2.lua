@@ -45,20 +45,22 @@ function love.load()
   simulation_reset()
 
   damping_coeff = 0.1
+
+  message = ''
 end
 
 function love.update(dt)
-  message = string.format(
-    [[
-      simulate: %s
-      consecutive_a_zero: %f
-      a: %s
-      v: %s
-      d: %s
-      init_vel: %s
-    ]],
-    simulate, consecutive_a_zero, a, v, d, init_vel
-  )
+  -- message = string.format(
+  --   [[
+  --     simulate: %s
+  --     consecutive_a_zero: %f
+  --     a: %s
+  --     v: %s
+  --     d: %s
+  --     init_vel: %s
+  --   ]],
+  --   simulate, consecutive_a_zero, a, v, d, init_vel
+  -- )
 
   if before_simulate then
     before_simulate = false
@@ -72,7 +74,8 @@ function love.update(dt)
     if consecutive_a_zero >= 0.1 then
       simulate = false
       simulation_reset()
-    elseif a:near(vec2d.zero, 100) then
+    elseif a:near{x = 1, y = 1} then
+      message = message .. string.format('\n%s', a)
       consecutive_a_zero = consecutive_a_zero + dt
     end
   end
