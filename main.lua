@@ -8,8 +8,8 @@
 --[[
   Agenda:
 
-  > remove all anim:...() references
-  > compose the list items instead of using hardcoded stuff
+  > (DONE) remove all anim:...() references
+  > (DONE) compose the list items instead of using hardcoded stuff
 
 ]]
 
@@ -70,8 +70,6 @@ function love.load()
     }
   }
 
-  attach_parent(component)
-
   scissor_props = {
     d = vec2d.copy_of(component.d),
     width = component.width,
@@ -79,11 +77,16 @@ function love.load()
   }
 
   on_component = false
-  to_move = nil
+  message = ''
 end
 
 function love.update(dt)
-
+  -- message = string.format(
+  --   [[
+  --     scroll_offset: %f
+  --   ]],
+  --   scissor_props.d.y - component.d.y
+  -- )
 end
 
 function love.draw()
@@ -100,84 +103,48 @@ function love.draw()
 
   component_tree_draw(component, origin)
 
-  -- love.graphics.setScissor()
+  love.graphics.setScissor()
+
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.print(message, 300, 100)
 end
 
 function love.mousepressed(x, y)
-  on_component = collision_check(
+  on_component = u.collides_d(
     {x = x, y = y},
-    component,
-    origin
+    scissor_props
   )
+
 end
 
 function love.mousemoved(x, y, dx, dy)
+
   if on_component then
     local delta = vec2d{x = 0, y = dy}
-    tree_move(component)
-    local new_pos = to_move.d + delta
-    if to_move then
-      if to_move.parent then -- *1
-        if new_pos.x < 0 and delta.x < 0 then
-          delta.x = -to_move.d.x
-        elseif new_pos.x > to_move.parent.width - to_move.width and delta.x > 0 then
-          delta.x = to_move.parent.width - (to_move.width + to_move.d.x)
-        end
-        if new_pos.y < 0 and delta.y < 0 then
-          delta.y = -to_move.d.y
-        elseif new_pos.y > to_move.parent.height - to_move.height and delta.y > 0 then
-          delta.y = to_move.parent.height - (to_move.height + to_move.d.y)
-        end
-      end
-      
-      to_move.d:update(
-        to_move.d + delta
-      )
+
+    local new_pos = component.d + delta
+
+    local scroll_offset = scissor_props.d.y - new_pos.y
+    local edge_delta = scissor_props.d.y - component.d.y
+    local scroll_limit = component.height - scissor_props.height
+    
+    if scroll_offset < 0 then
+      delta.y = edge_delta
+    elseif scroll_offset > scroll_limit then
+      delta.y = edge_delta - scroll_limit
     end
+
+    component.d:update(
+      component.d + delta
+    )
   end
 end
 
 function love.mousereleased(x, y)
-  to_move = nil
   on_component = false
-  collision_reset(component)
 end
 
 ------------------------------------------
-
-function collision_check(pointer, node, origin)
-  local pos = origin + node.d
-  if node.collides ~= false then
-    node.on_component = u.collides_d(
-      pointer,
-      {
-        d = pos, width = node.width, height = node.height
-      }
-    )
-
-    local children_collide = false
-
-    if node.children then
-      for _, child_node in pairs(node.children) do
-        children_collide = children_collide or
-          collision_check(pointer, child_node, pos)
-      end
-    end
-
-    return node.on_component or children_collide
-  else 
-    return false
-  end
-end
-
-function attach_parent(node)
-  if node.children then
-    for _, child in pairs(node.children) do
-      child.parent = node
-      attach_parent(child)
-    end
-  end
-end
 
 function component_tree_draw(node, origin)
   local pos = origin + node.d
@@ -192,26 +159,6 @@ function component_tree_draw(node, origin)
   if node.children then
     for _, child_node in pairs(node.children) do
       component_tree_draw(child_node, pos)
-    end
-  end
-end
-
-function tree_move(node)
-  if node.on_component then
-    to_move = node
-  end
-  if node.children then
-    for _, child_node in pairs(node.children) do
-      tree_move(child_node)
-    end
-  end
-end
-
-function collision_reset(node)
-  node.on_component = false
-  if node.children then
-    for _, child_node in pairs(node.children) do
-      collision_reset(child_node)
     end
   end
 end

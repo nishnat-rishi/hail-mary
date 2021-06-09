@@ -97,8 +97,8 @@ function vec2d.near(v1, v2, threshold)
 end
 
 vec2d.zero = vec2d()
-vec2d.i = vec2d({x = 1, y = 0})
-vec2d.j = vec2d({x = 0, y = 1})
+vec2d.i = vec2d{x = 1, y = 0}
+vec2d.j = vec2d{x = 0, y = 1}
 
 -- Testing area
 

@@ -96,7 +96,7 @@ end
 function love.draw()
   love.graphics.print(message, 100, 100)
 
-  love.graphics.circle('fill', 
+  love.graphics.circle('fill',
     origin.x, origin.y, 4
   )
 
