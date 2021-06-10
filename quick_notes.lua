@@ -4,6 +4,6 @@
   module with some cute ways to provide springyness and so on to
   components.
 
-  Scroll stuff can be tested as well
+  (DONE) Scroll stuff can be tested as well
 
 ]]

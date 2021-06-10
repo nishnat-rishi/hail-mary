@@ -60,6 +60,7 @@ end
 function vec2d.copy_of(v)
   return setmetatable({x=v.x, y=v.y}, vec2d)
 end
+vec2d.from = vec2d.copy_of -- OFFICIALIZE 'from', DEPRECATE 'copy_of'
 
 function vec2d.mag(v)
   return math.sqrt(v.x^2 + v.y^2)

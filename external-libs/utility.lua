@@ -47,9 +47,21 @@ local function table_string(t)
 end
 utility.table_string = table_string
 
+function utility.collides_normal(pointer, obj_pos, obj_dim)
+  local x, y = pointer.x, pointer.y
+  return (x >= obj_pos.x and x <= obj_pos.x + obj_dim.width) and
+    (y >= obj_pos.y and y <= obj_pos.y + obj_dim.height)
+end
+
 function utility.collides(pointer, d_props, scale) 
-  -- uses scale as well hopefully,
-  -- rotate is too hard though :( (can be done with line formulas)
+  -- this ASSUMES the scaling is happening from the middle of 
+  --  the rectangular collidee. THIS ASSUMPTION works only for
+  --  that one example where i was tesling translation, rotation and
+  --  scaling on android! we gotta do something about this hmmm
+
+  -- (SOMEWHAT) uses scale as well hopefully (yes it does :")),
+  -- rotate is too hard though :( (can be done with line formulas,
+  --  but who cares (ans: NOBODY (for now)))
   local object = d_props
   scale = scale or 1
   local x, y = pointer.x ,pointer.y

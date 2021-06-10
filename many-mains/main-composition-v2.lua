@@ -1,5 +1,14 @@
 -- main-composition-v2
 
+--[[
+  SEPARATE out tree_draw's effective_x and effective_y calculations
+  into a tree_calculate_effectives function which will be in
+  love.update().
+  
+  This allows us to access the effectives and easily do some cool
+  springy simulations
+]]
+
 local u = require('external-libs.utility')
 local vec2d = require('external-libs.vec2d')
 
@@ -66,7 +75,7 @@ function love.load()
   attach_parent(component_root)
 
   on_component = false
-  to_move = nil
+  to_move = { component = nil }
 end
 
 function love.update(dt)
@@ -108,32 +117,34 @@ end
 function love.mousemoved(x, y, dx, dy)
   if on_component then
     local delta = vec2d{x = dx, y = dy}
-    tree_move(component_root)
-    local new_pos = to_move.d + delta
-    if to_move then
-      if to_move.parent then -- *1
+    collision_component_detect(component_root, to_move)
+    local new_pos = to_move.component.d + delta
+    if to_move.component then
+      if to_move.component.parent then -- *1
         if new_pos.x < 0 and delta.x < 0 then
-          delta.x = -to_move.d.x
-        elseif new_pos.x > to_move.parent.width - to_move.width and delta.x > 0 then
-          delta.x = to_move.parent.width - (to_move.width + to_move.d.x)
+          delta.x = -to_move.component.d.x
+        elseif new_pos.x > to_move.component.parent.width - to_move.component.width and delta.x > 0 then
+          delta.x = to_move.component.parent.width - (to_move.component.width + to_move.component.d.x)
         end
         if new_pos.y < 0 and delta.y < 0 then
-          delta.y = -to_move.d.y
-        elseif new_pos.y > to_move.parent.height - to_move.height and delta.y > 0 then
-          delta.y = to_move.parent.height - (to_move.height + to_move.d.y)
+          delta.y = -to_move.component.d.y
+        elseif new_pos.y > to_move.component.parent.height - to_move.component.height and delta.y > 0 then
+          delta.y = to_move.component.parent.height - (to_move.component.height + to_move.component.d.y)
         end
       end
       
-      to_move.d:update(
-        to_move.d + delta
+      to_move.component.d:update(
+        to_move.component.d + delta
       )
     end
   end
 end
 
 function love.mousereleased(x, y)
-  parental_clamp(to_move)
-  to_move = nil
+  if to_move.component then
+    parental_clamp(to_move.component)
+  end
+  to_move.component = nil
   on_component = false
   collision_reset(component_root)
 end
@@ -149,7 +160,8 @@ function collision_check(pointer, node, origin)
         d = pos, width = node.width, height = node.height
       }
     )
-
+    return node.on_component
+  else 
     local children_collide = false
 
     if node.children then
@@ -159,9 +171,7 @@ function collision_check(pointer, node, origin)
       end
     end
 
-    return node.on_component or children_collide
-  else 
-    return false
+    return children_collide
   end
 end
 
@@ -189,13 +199,13 @@ function collision_reset(node)
   end
 end
 
-function tree_move(node)
+function collision_component_detect(node, component_wrapper)
   if node.on_component then
-    to_move = node
+    component_wrapper.component = node
   end
   if node.children then
     for _, child_node in pairs(node.children) do
-      tree_move(child_node)
+      collision_component_detect(child_node, component_wrapper)
     end
   end
 end
