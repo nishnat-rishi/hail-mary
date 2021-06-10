@@ -14,7 +14,7 @@ function love.load()
     component.pos, {dest = spring_to,}
   )
 
-  -- init_vel = vec2d()
+  init_vel = vec2d()
 
   message = ''
 end
@@ -23,10 +23,10 @@ function love.update(dt)
   spring:update(dt)
   message = string.format('%s', init_vel)
 
-  -- if on_component then
-  --   init_vel:update(init_vel:s_mul(1 / dt))
-  --   init_vel:clamp{x = 1000, y = 1000}
-  -- end
+  if on_component then
+    init_vel:update(init_vel:s_mul(1 / dt))
+    init_vel:clamp{x = 1000, y = 1000}
+  end
 end
 
 function love.draw()
@@ -40,33 +40,32 @@ function love.draw()
 end
 
 function love.mousepressed(x, y)
-  -- on_component = collides(
-  --   {x = x, y = y},
-  --   component.pos,
-  --   component
-  -- )
+  on_component = collides(
+    {x = x, y = y},
+    component.pos,
+    component
+  )
 
-  -- if on_component then
-  -- end
+  if on_component then
+    spring:hold(spring_id)
+  end
 end
 
--- function love.mousemoved(x, y, dx, dy)
---   if on_component then
---     local delta = vec2d{x = dx, y = dy}
---     component.pos:update(
---       component.pos + delta
---     )
---     init_vel:update(delta)
---   end
--- end
+function love.mousemoved(x, y, dx, dy)
+  if on_component then
+    local delta = vec2d{x = dx, y = dy}
+    component.pos:update(
+      component.pos + delta
+    )
+    init_vel:update(delta)
+  end
+end
 
 function love.mousereleased(x, y)
-  spring:hold(spring_id)
-  spring:release(spring_id, nil, {x = x, y = y})
-  -- if on_component then
-  --   on_component = false
-  --   spring:release(spring_id, init_vel)
-  -- end
+  if on_component then
+    on_component = false
+    spring:release(spring_id, init_vel)
+  end
 end
 
 function collides(pointer, obj_pos, obj_dim)

@@ -14,7 +14,6 @@
   it's because the velocity is absolutely clamped between 1000 u/s
   on either axes. which means asymmetric limit violations make the
   simulation pathway weird :) YOU CAN CHANGE THIS AT YOUR PERIL using
-  spring:config{velocity_limit: {x = ..., y = ...}}.
 
 ]]
 
@@ -42,19 +41,15 @@ local vec2d = require('external-libs.vec2d')
 local spring = {
   simulations = {},
   current_pos = nil,
-  velocity_limit = {x = 1000, y = 1000},
   _pending_removal = {}
 }
-
-function spring:config(config)
-  spring.velocity_limit = config.velocity_limit or spring.velocity_limit
-end
 
 function spring:attach(component_pos, config)
   config = config or {}
   config.k = config.k or 20
   config.m = config.m or 0.08
   config.damp_coeff = config.damp_coeff or 0.1
+  config.velocity_limit = config.velocity_limit or {x = 1000, y = 1000}
   spring.simulations[component_pos] = {
     config = config,
     dest = config.dest or vec2d()
@@ -100,7 +95,7 @@ function spring:update(dt)
     spring.current_pos, item = next(spring.simulations, spring.current_pos)
 
     if item.simulate then
-      if item.zero_accumulator >= 1 then
+      if item.zero_accumulator >= 5 then
         item.simulate = false
         spring:reset_simulation(spring.current_pos)
       elseif item.v:near{x = 1, y = 1} then
@@ -118,7 +113,7 @@ function spring:update(dt)
           math.exp(-item.t * item.config.damp_coeff)
         )
       )
-      item.v:clamp(spring.velocity_limit)
+      item.v:clamp(item.config.velocity_limit)
 
       spring.current_pos:update(
         spring.current_pos + item.v:s_mul(dt)
