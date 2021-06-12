@@ -3,7 +3,9 @@
 -- TODO
 -- i want the inner part of the active radio button to
 -- spring to it's new position, if there is any.
--- component to spring to the point wher
+-- component to spring to the point wher...
+
+-- all of this componentyness needs to have its own module, yes?
 
 local vec2d = require('external-libs.vec2d')
 local u = require('external-libs.utility')
@@ -44,6 +46,7 @@ function love.load()
     d = vec2d{x = 10, y = 10},
     width = 20, height = 20,
     color = {r = 73 / 255, g = 190 / 255, b = 230 / 255},
+    collides = false
     -- color = {r = 18 / 255, g = 140 / 255, b = 181 / 255},
   }
 
