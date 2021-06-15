@@ -6,7 +6,14 @@
 
   (DONE) Scroll stuff can be tested as well
 
-  components need their own module! lots of tree_draw, attach_*, and
-  so on and so forth lying around here and there!
+  (they finally got it, yay! :") components need their own module!
+  lots of tree_draw, attach_*, and so on and so forth lying around
+  here and there!
+
+  ----
+
+  The above 3 are done I think. Let's think of some more stuff here.
+
+  
 
 ]]

@@ -20,6 +20,7 @@ function component:create(params)
   return setmetatable({ -- as of now, no real use of setmetatable here
     id = params.id or 'no_id',
     pos = params.pos or vec2d(),
+    effective_pos = params.effective_pos or vec2d(),
     width = params.width or 0,
     height = params.height or 0,
     rx = params.rx or 0,
@@ -31,12 +32,12 @@ function component:create(params)
 end
 
 -- node level function
-function component:switch_parent(node, new_parent)
+function component.switch_parent(node, new_parent)
   if node.parent then
     for index, child_node in pairs(node.parent.children) do
       if node == child_node then
-        table.remove(index)
-        if not next(node.parent.childern) then
+        table.remove(node.parent.children, index)
+        if not next(node.parent.children) then
           node.parent.children = nil
         end
         break
@@ -44,10 +45,12 @@ function component:switch_parent(node, new_parent)
     end
   end
   node.parent = new_parent
-  if not node.parent.children then
+  if node.parent then
+    if not node.parent.children then
     node.parent.children = {}
+    end
+    table.insert(node.parent.children, node)
   end
-  table.insert(node.parent.children, node)
 end
 
 -- node level function
@@ -85,20 +88,6 @@ end
 component.attach_parents = attach_parents
 
 -- root level function
-local function attach_effectives(node, origin)
-  local pos = origin + node.pos
-
-  node.effective_pos = pos
-  
-  if node.children then
-    for _, child_node in pairs(node.children) do
-      attach_effectives(child_node, pos)
-    end
-  end
-end
-component.attach_effectives = attach_effectives
-
--- root level function
 local function update_effectives(node, origin)
   local pos = origin + node.pos
 
@@ -113,7 +102,7 @@ end
 component.update_effectives = update_effectives
 
 -- node level function (only updates one node)
-local function update_effectives_by_parent(node, origin)
+local function attach_effectives_by_parent(node, origin)
   local chain_node = node
   node.effective_pos = vec2d.from(node.pos)
   while true do
@@ -130,7 +119,7 @@ local function update_effectives_by_parent(node, origin)
     end
   end
 end
-component.update_effectives_by_parent = update_effectives_by_parent
+component.attach_effectives_by_parent = attach_effectives_by_parent
 
 -- root/node level function (prereq: update_effectives/attach_effectives)
 local function collision_tag(node, pointer)
@@ -186,7 +175,7 @@ component.collision_component_find = collision_component_find
 -- root level function
 function component.load(node, origin)
   node:attach_parents()
-  node:attach_effectives(origin)
+  node:update_effectives(origin)
 end
 
 -- root level function
