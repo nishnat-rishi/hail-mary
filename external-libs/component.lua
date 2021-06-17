@@ -1,6 +1,6 @@
 local vec2d = require('external-libs.vec2d')
 
-local component = {}
+local component = { utils = {} }
 component.__index = component
 component.__tostring = function (c) return c.id end
 
@@ -12,6 +12,7 @@ local function collides_vector(pointer, obj)
     (pointer.y >= obj.pos.y and pointer.y <= obj.pos.y + obj.height)
   )
 end
+component.utils.collides = collides_vector
 
 ------------------------------------------------------------
 -- node level function
