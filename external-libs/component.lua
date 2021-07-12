@@ -22,8 +22,8 @@ function component:create(params)
     id = params.id or 'no_id',
     pos = params.pos or vec2d(),
     effective_pos = params.effective_pos or vec2d(),
-    width = params.width or 0,
-    height = params.height or 0,
+    width = params.width or 10,
+    height = params.height or 10,
     rx = params.rx or 0,
     ry = params.ry or params.rx or 0,
     collides = params.collides == nil and true or false,
@@ -31,6 +31,11 @@ function component:create(params)
     children = params.children
   }, component)
 end
+
+-- we NEED stuff like this to have good defaults
+-- function component:arrange_grid(items, cols)
+
+-- end
 
 -- node level function
 function component.switch_parent(node, new_parent)

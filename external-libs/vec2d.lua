@@ -1,6 +1,6 @@
 local vec2d = {}
 vec2d.__index = vec2d
-some_stuff = {
+local some_stuff = {
   __call = function(vec2d, vector)
     if not vector then
       vector = {}
