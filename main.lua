@@ -2,6 +2,7 @@ local component = require('external-libs.component')
 local vec2d = require('external-libs.vec2d')
 local color = require('external-libs.color')
 local error_handler = require('external-libs.event')
+local s = require('external-libs.size')
 
 local u = require('external-libs.utility')
 
@@ -20,7 +21,8 @@ function error_handler:handle(event)
 end
 
 function love.load()
-  origin = vec2d{x = 100, y = 100}
+  origin = vec2d{x = 120, y = 50}
+  s.factor = 2
 
   color:set_template{
     red = {
@@ -41,31 +43,64 @@ function love.load()
     }
   }
 
-  part_creator = function(pos, color)
+  s:set_variables{
+    base = {
+      inner = {
+        gap = s(16),
+        token = s(16),
+        size = s(80)
+      },
+      outer = {
+        gap = s(20),
+        size = s(20 * 6)
+      }
+    },
+    tile = s(20)
+  }
+
+  base_create = function(pos, color)
     return component:create{
       pos = pos,
-      width = 140, height = 140,
+      width = s.v.base.outer.size, 
+      height = s.v.base.outer.size,
       color = color.deep,
       children = {
         component:create{
-          pos = vec2d{x = 20, y = 20},
-          width = 100, height = 100,
+          pos = vec2d{
+            x = s.v.base.outer.gap,
+            y = s.v.base.outer.gap
+          },
+          width = s.v.base.inner.size,
+          height = s.v.base.inner.size,
           color = color.shallow,
           children = (function()
             local val = {}
             local coords = {
-              vec2d{x = 20, y = 20},
-              vec2d{x = 20, y = 60},
-              vec2d{x = 60, y = 20},
-              vec2d{x = 60, y = 60},
+              vec2d{
+                x = s.v.base.inner.gap,
+                y = s.v.base.inner.gap
+              },
+              vec2d{
+                x = s.v.base.inner.gap,
+                y = s.v.base.inner.token + 2 * s.v.base.inner.gap
+              },
+              vec2d{
+                x = s.v.base.inner.token + 2 * s.v.base.inner.gap,
+                y = s.v.base.inner.gap
+              },
+              vec2d{
+                x = s.v.base.inner.token + 2 * s.v.base.inner.gap,
+                y = s.v.base.inner.token + 2 * s.v.base.inner.gap
+              },
             }
     
             for i, vec in ipairs(coords) do
               val[i] = component:create{
                 pos = vec,
-                width = 20, height = 20,
+                width = s.v.base.inner.token,
+                height = s.v.base.inner.token,
                 color = color.deep,
-                rx = 10
+                rx = s(16 / 2)
               }
             end
     
@@ -75,15 +110,31 @@ function love.load()
       }
     }
   end
+  
+  tile = component:creator{
+    width = s(20), height = s(20),
+    color = color(0, 0, 0),
+    children = {
+      component:create{
+        pos = vec2d{x = s(1), y = s(1)},
+        width = s(18), height = s(18),
+      }
+    }
+  }
+
+  -- path = component:create{
+  -- a 3 x 15 rectangle in which we will place tile() children.
+  --}
 
   board = component:create{
     pos = vec2d(),
-    width = 280, height = 280,
+    width = s(300), height = s(300),
     children = {
-      part_creator(vec2d{x = 0, y = 0}, color.s.red),
-      part_creator(vec2d{x = 140, y = 0}, color.s.blue),
-      part_creator(vec2d{x = 0, y = 140}, color.s.green),
-      part_creator(vec2d{x = 140, y = 140}, color.s.yellow),
+      tile(vec2d{x = s(140)}),
+      base_create(vec2d{x = s(0), y = s(0)}, color.s.red),
+      base_create(vec2d{x = s(180), y = s(0)}, color.s.blue),
+      base_create(vec2d{x = s(0), y = s(180)}, color.s.green),
+      base_create(vec2d{x = s(180), y = s(180)}, color.s.yellow),
     }
   }
 

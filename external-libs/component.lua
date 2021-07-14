@@ -32,6 +32,13 @@ function component:create(params)
   }, component)
 end
 
+function component:creator(params)
+  return function (pos)
+    params.pos = pos
+    return component:create(params)
+  end
+end
+
 -- we NEED stuff like this to have good defaults
 -- function component:arrange_grid(items, cols)
 
