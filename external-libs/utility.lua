@@ -115,4 +115,13 @@ function utility.diminish(value, amount)
     sign(value) * ret_val
 end
 
+function utility.debug_values(t)
+  local s = ''
+  for k, v in pairs(t) do
+    s = s .. string.format('%s: %f\n', k, v)
+  end
+  
+  return s
+end
+
 return utility

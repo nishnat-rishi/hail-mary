@@ -1,8 +1,21 @@
 local vec2d = require('external-libs.vec2d')
 
-local component = { utils = {} }
+------------------------------------------------------------
+--[[ TRIANGLE related updates
+
+  > collision_tag
+  > > collides_vector
+
+--]]
+------------------------------------------------------------
+
+local component = { utils = {}, meta = {} }
 component.__index = component
 component.__tostring = function (c) return c.id end
+
+function component:initialize(meta)
+  self.meta = meta
+end
 
 ------------------------------------------------------------
 
@@ -20,6 +33,7 @@ function component:create(params)
   params.color = params.color or {r = 1, g = 1, b = 1, a = 1}
   return setmetatable({ -- as of now, no real use of setmetatable here
     id = params.id or 'no_id',
+    type = 'rect',
     pos = params.pos or vec2d(),
     effective_pos = params.effective_pos or vec2d(),
     width = params.width or 10,
@@ -28,14 +42,44 @@ function component:create(params)
     ry = params.ry or params.rx or 0,
     collides = params.collides == nil and true or false,
     color = params.color,
-    children = params.children
+    children = params.children,
+    draw_fn = component.draw_rectangle
   }, component)
 end
 
+function component:create_triangle(params)
+  params.color = params.color or {r = 1, g = 1, b = 1, a = 1}
+  return setmetatable({
+    id = params.id or 'no_id',
+    type = 'triangle',
+    pos = params.pos or vec2d(),
+    effective_pos = params.effective_pos or vec2d(),
+    width = params.width or 10,
+    height = params.height or 10,
+    p1 = params.p1 or vec2d(),
+    p2 = params.p2 or vec2d{x = 10},
+    p3 = params.p3 or vec2d{y = 10},
+    collides = params.collides == nil and true or false,
+    color = params.color,
+    children = params.children,
+    draw_fn = component.draw_triangle
+  }, component)
+end
+
+local function copy_component_elements(node)
+  if node.children then
+    for i, v in ipairs(node.children) do
+      node.children[i] = copy_component_elements(v)
+    end
+  end
+  local r = component:create(node)
+  return r
+end
+
 function component:creator(params)
-  return function (pos)
+  return function(pos)
     params.pos = pos
-    return component:create(params)
+    return copy_component_elements(params)
   end
 end
 
@@ -196,15 +240,32 @@ function component.update(node, origin)
   node:update_effectives(origin)
 end
 
+------------------------------------------------------------------
+
+function component.draw_rectangle(node)
+  love.graphics.rectangle('fill',
+  node.effective_pos.x, node.effective_pos.y,
+  node.width, node.height,
+  node.rx
+)
+end
+
+function component.draw_triangle(node)
+  love.graphics.polygon('fill',
+    node.effective_pos.x + node.p1.x, node.effective_pos.y + node.p1.y,
+    node.effective_pos.x + node.p2.x, node.effective_pos.y + node.p2.y,
+    node.effective_pos.x + node.p3.x, node.effective_pos.y + node.p3.y
+  )  
+end
+
+------------------------------------------------------------------
+
 -- root level function (prereq: attach_effectives)
 local function draw(node)
   love.graphics.setColor(node.color.r, node.color.g, node.color.b)
 
-  love.graphics.rectangle('fill',
-    node.effective_pos.x, node.effective_pos.y,
-    node.width, node.height,
-    node.rx
-  )
+  node:draw_fn()
+  
   if node.children then
     for _, child_node in pairs(node.children) do
       draw(child_node)
