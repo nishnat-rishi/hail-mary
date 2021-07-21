@@ -174,11 +174,52 @@ function love.load()
   -- a 3 x 15 rectangle in which we will place tile() children.
   --}
 
-  random_triangle = component:create_triangle{
-    pos = vec2d{x = s(10), y = s.v.base.outer.size + s(10)},
-    color = color.s.blue.deep
-  }
+  centre_structure = function (pos)
+    return component:create{
+      pos = pos,
+      children = {
+        component:create_triangle{ -- left
+          p1 = vec2d(), 
+          p2 = vec2d{x = s(30), y = s(30)}, 
+          p3 = vec2d{y = s(60)},
+          color = color.s.red.deep
+        },
+        component:create_triangle{
+          p1 = vec2d(), 
+          p2 = vec2d{x = s(30), y = s(30)}, 
+          p3 = vec2d{x = s(60)},
+          color = color.s.blue.deep
+        },
+        component:create_triangle{
+          pos = vec2d{x = s(60), y = s(60)},
+          p1 = vec2d(), 
+          p2 = vec2d{x = s(-30), y = s(-30)}, 
+          p3 = vec2d{y = s(-60)},
+          color = color(0, 0, 0),
+          children = {
+            component:create_triangle{
+              pos = vec2d{x = s(-1), y = s(-1)},
+              p1 = vec2d(),
+              p2 = vec2d{x = s(-28), y = s(-28)},
+              p3 = vec2d{y = s(-56)},
+              color = color.s.yellow.deep
+            }
+          }
+        },
+        component:create_triangle{
+          pos = vec2d{x = s(60), y = s(60)},
+          p1 = vec2d(), 
+          p2 = vec2d{x = s(-30), y = s(-30)}, 
+          p3 = vec2d{x = s(-60)},
+          color = color.s.green.deep,
+          children = {
 
+          }
+        },
+      }
+    }
+  end
+  
   board = component:create{
     pos = vec2d(),
     width = s(300), height = s(300),
@@ -188,16 +229,11 @@ function love.load()
       base_create(vec2d{x = s(180), y = s(0)}, color.s.blue),
       base_create(vec2d{x = s(0), y = s(180)}, color.s.green),
       base_create(vec2d{x = s(180), y = s(180)}, color.s.yellow),
-      random_triangle,
+      centre_structure(vec2d{x = s.v.base.outer.size, y = s.v.base.outer.size}),
     }
   }
 
   board:load(origin)
-
-  meta.debug_message = u.debug_values{
-    x = random_triangle.effective_pos.x,
-    y = random_triangle.effective_pos.y
-  }
 end
 
 function love.update(dt)
