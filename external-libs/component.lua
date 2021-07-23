@@ -6,6 +6,14 @@ local vec2d = require('external-libs.vec2d')
   > collision_tag
   > > collides_vector
 
+
+  TEXTURE related updates
+
+  > lots of stuff idk
+
+  > but also, make sure scaling works for textures automagically like this->
+  image:height() should be scaled down to node.height and so on
+  (love.graphics.scale(node.height / image:height())?)
 --]]
 ------------------------------------------------------------
 
@@ -44,6 +52,23 @@ function component:create(params)
     color = params.color,
     children = params.children,
     draw_fn = component.draw_rectangle
+  }, component)
+end
+
+function component:create_texture(params)
+  params.color = params.color or {r = 1, g = 1, b = 1, a = 1}
+  return setmetatable({
+    id = params.id or 'no_id',
+    type = 'texture',
+    pos = params.pos or vec2d(),
+    effective_pos = params.effective_pos or vec2d(),
+    width = params.width or 10,
+    height = params.height or 10,
+    texture = params.texture,
+    collides = params.collides == nil and true or false,
+    color = params.color,
+    children = params.children,
+    draw_fn = component.draw_texture
   }, component)
 end
 
@@ -255,7 +280,11 @@ function component.draw_triangle(node)
     node.effective_pos.x + node.p1.x, node.effective_pos.y + node.p1.y,
     node.effective_pos.x + node.p2.x, node.effective_pos.y + node.p2.y,
     node.effective_pos.x + node.p3.x, node.effective_pos.y + node.p3.y
-  )  
+  )
+end
+
+function component.draw_texture(node)
+  love.graphics.draw(node.texture, node.effective_pos.x, node.effective_pos.y)
 end
 
 ------------------------------------------------------------------

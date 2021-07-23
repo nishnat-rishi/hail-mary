@@ -22,7 +22,10 @@ function error_handler:handle(event)
 end
 
 function love.load()
-  origin = vec2d{x = 150, y = 50}
+  love.graphics.setBackgroundColor(1, 1, 1)
+  love.window.setMode(700, 700)
+
+  origin = vec2d{x = 50, y = 50}
   s.factor = 2
 
   color:set_template{
@@ -58,64 +61,72 @@ function love.load()
     },
     tile = {
       size = s(20),
-      border = s(1)
+      border = s(0.5)
     }
   }
 
-  base_create = function(pos, color)
+  base_create = function(pos, base_color)
     return component:create{
       pos = pos,
-      width = s.v.base.outer.size, 
+      color = color(0, 0, 0),
+      width = s.v.base.outer.size,
       height = s.v.base.outer.size,
-      color = color.deep,
       children = {
         component:create{
-          pos = vec2d{
-            x = s.v.base.outer.gap,
-            y = s.v.base.outer.gap
-          },
-          width = s.v.base.inner.size,
-          height = s.v.base.inner.size,
-          color = color.shallow,
-          children = (function()
-            local val = {}
-            local coords = {
-              vec2d{
-                x = s.v.base.inner.gap,
-                y = s.v.base.inner.gap
+          pos = vec2d{x = s.v.tile.border, y = s.v.tile.border},
+          width = s.v.base.outer.size - 2 * s.v.tile.border,
+          height = s.v.base.outer.size - 2 * s.v.tile.border,
+          color = base_color.deep,
+          children = {
+            component:create{
+              pos = vec2d{
+                x = s.v.base.outer.gap,
+                y = s.v.base.outer.gap
               },
-              vec2d{
-                x = s.v.base.inner.gap,
-                y = s.v.base.inner.token + 2 * s.v.base.inner.gap
-              },
-              vec2d{
-                x = s.v.base.inner.token + 2 * s.v.base.inner.gap,
-                y = s.v.base.inner.gap
-              },
-              vec2d{
-                x = s.v.base.inner.token + 2 * s.v.base.inner.gap,
-                y = s.v.base.inner.token + 2 * s.v.base.inner.gap
-              },
+              width = s.v.base.inner.size,
+              height = s.v.base.inner.size,
+              color = base_color.shallow,
+              children = (function()
+                local val = {}
+                local coords = {
+                  vec2d{
+                    x = s.v.base.inner.gap,
+                    y = s.v.base.inner.gap
+                  },
+                  vec2d{
+                    x = s.v.base.inner.gap,
+                    y = s.v.base.inner.token + 2 * s.v.base.inner.gap
+                  },
+                  vec2d{
+                    x = s.v.base.inner.token + 2 * s.v.base.inner.gap,
+                    y = s.v.base.inner.gap
+                  },
+                  vec2d{
+                    x = s.v.base.inner.token + 2 * s.v.base.inner.gap,
+                    y = s.v.base.inner.token + 2 * s.v.base.inner.gap
+                  },
+                }
+        
+                for i, vec in ipairs(coords) do
+                  val[i] = component:create{
+                    pos = vec,
+                    width = s.v.base.inner.token,
+                    height = s.v.base.inner.token,
+                    color = base_color.deep,
+                    rx = s.v.base.inner.token / 2
+                  }
+                end
+        
+                return val
+              end)()
             }
-    
-            for i, vec in ipairs(coords) do
-              val[i] = component:create{
-                pos = vec,
-                width = s.v.base.inner.token,
-                height = s.v.base.inner.token,
-                color = color.deep,
-                rx = s.v.base.inner.token / 2
-              }
-            end
-    
-            return val
-          end)()
+          }
         }
       }
     }
   end
   
-  tile_create = function(pos)
+  tile_create = function(pos, base_color)
     return component:create{
     pos = pos,
     width = s.v.tile.size, height = s.v.tile.size,
@@ -125,54 +136,115 @@ function love.load()
           pos = vec2d{x = s.v.tile.border, y = s.v.tile.border},
           width = s.v.tile.size - 2 * s.v.tile.border,
           height = s.v.tile.size - 2 * s.v.tile.border,
+          color = base_color
         }
       }
     }
   end
 
-  tile_set = component:create{
-    width = 3 * s.v.tile.size,
-    height = (3 + 6 + 6) * s.v.tile.size,
-    children = (function()
-      x_init, y_init = s.v.base.outer.size, 0
-      x_end = s.v.base.outer.size + 2 * s.v.tile.size
-      y_end = 0 + (3 + 6 + 6 - 1) * s.v.tile.size
-      gap = s.v.tile.size
-      tiles = {}
+  tile_set_vertical_top_create = function (pos, base_color)
+    return component:create{
+      pos = pos,
+      width = 3 * s.v.tile.size,
+      height = 6 * s.v.tile.size,
+      children = (function()
+        local tiles = {}
+        local gap = s.v.tile.size
+        local tile_color
 
-      -- meta.debug_message = u.debug_values{
-      --   x_init = x_init,
-      --   y_init = y_init,
-      --   x_end = x_end,
-      --   y_end = y_end,
-      --   gap = gap
-      -- }
-
-      -- tiles[1] = tile_create(vec2d{x = x_init, y = y_init})
-      -- tiles[2] = tile_create(vec2d{x = x_init + gap, y = y_init + gap})
-      -- tiles[3] = tile_create(vec2d{x = x_init + 2 * gap, y = y_init + 2 * gap})
-
-      -- meta.debug_message = meta.debug_message .. '\n\n'
-      -- meta.debug_message = meta.debug_message .. string.format('%p\n', tiles[1])
-      -- meta.debug_message = meta.debug_message .. string.format('%p\n\n', tiles[1].children[1])
-      -- meta.debug_message = meta.debug_message .. string.format('%p\n', tiles[2])
-      -- meta.debug_message = meta.debug_message .. string.format('%p\n\n', tiles[2].children[1])
-      -- meta.debug_message = meta.debug_message .. string.format('%p\n', tiles[3])
-      -- meta.debug_message = meta.debug_message .. string.format('%p\n\n', tiles[3].children[1])
-      
-      for y = y_init, y_end, gap do
-        for x = x_init, x_end, gap do
-          tiles[#tiles+1] = tile_create(vec2d{x = x, y = y})
+        for y = 0, 6-1 do
+          for x = 0, 3-1 do
+            if (y >= 1 and x == 1) or (x == 2 and y == 1) then
+              tile_color = base_color
+            else
+              tile_color = color(255, 255, 255)
+            end
+            tiles[#tiles+1] = tile_create(vec2d{x = x * gap, y = y * gap}, tile_color)
+          end
         end
-      end
 
-      return tiles
-    end)()
-  }
+        return tiles
+      end)()
+    }
+  end
 
-  -- path = component:create{
-  -- a 3 x 15 rectangle in which we will place tile() children.
-  --}
+  tile_set_vertical_bottom_create = function (pos, base_color)
+    return component:create{
+      pos = pos,
+      width = 3 * s.v.tile.size,
+      height = 6 * s.v.tile.size,
+      children = (function()
+        local tiles = {}
+        local gap = s.v.tile.size
+        local tile_color
+
+        for y = 0, 6-1 do
+          for x = 0, 3-1 do
+            if (y <= 4 and x == 1) or (x == 0 and y == 4) then
+              tile_color = base_color
+            else
+              tile_color = color(255, 255, 255)
+            end
+            tiles[#tiles+1] = tile_create(vec2d{x = x * gap, y = y * gap}, tile_color)
+          end
+        end
+
+        return tiles
+      end)()
+    }
+  end
+
+  tile_set_horizontal_left_create = function (pos, base_color)
+    return component:create{
+      pos = pos,
+      width = 6 * s.v.tile.size,
+      height = 3 * s.v.tile.size,
+      children = (function()
+        local tiles = {}
+        local gap = s.v.tile.size
+        local tile_color
+
+        for y = 0, 3-1 do
+          for x = 0, 6-1 do
+            if (x >= 1 and y == 1) or (x == 1 and y == 0) then
+              tile_color = base_color
+            else
+              tile_color = color(255, 255, 255)
+            end
+            tiles[#tiles+1] = tile_create(vec2d{x = x * gap, y = y * gap}, tile_color)
+          end
+        end
+
+        return tiles
+      end)()
+    }
+  end
+
+  tile_set_horizontal_right_create = function (pos, base_color)
+    return component:create{
+      pos = pos,
+      width = 6 * s.v.tile.size,
+      height = 3 * s.v.tile.size,
+      children = (function()
+        local tiles = {}
+        local gap = s.v.tile.size
+        local tile_color
+
+        for y = 0, 3-1 do
+          for x = 0, 6-1 do
+            if (x  <= 4 and y == 1) or (x == 4 and y == 2) then
+              tile_color = base_color
+            else
+              tile_color = color(255, 255, 255)
+            end
+            tiles[#tiles+1] = tile_create(vec2d{x = x * gap, y = y * gap}, tile_color)
+          end
+        end
+
+        return tiles
+      end)()
+    }
+  end
 
   centre_structure = function (pos)
     return component:create{
@@ -182,13 +254,29 @@ function love.load()
           p1 = vec2d(), 
           p2 = vec2d{x = s(30), y = s(30)}, 
           p3 = vec2d{y = s(60)},
-          color = color.s.red.deep
+          color = color(0, 0, 0),
+          children = {
+            component:create_triangle{
+              p1 = vec2d{x = s.v.tile.border, y = 2 * s.v.tile.border},
+              p2 = vec2d{x = s(30) - 1.5 * s.v.tile.border, y = s(30)},
+              p3 = vec2d{x = 1.5 * s.v.tile.border, y = s(60) - 3 * s.v.tile.border},
+              color = color.s.red.deep
+            }
+          }
         },
         component:create_triangle{
           p1 = vec2d(), 
           p2 = vec2d{x = s(30), y = s(30)}, 
           p3 = vec2d{x = s(60)},
-          color = color.s.blue.deep
+          color = color(0, 0, 0),
+          children = {
+            component:create_triangle{
+              p1 = vec2d{x = 2 * s.v.tile.border, y = s.v.tile.border},
+              p2 = vec2d{x = s(30), y = s(30) - 1.5 * s.v.tile.border},
+              p3 = vec2d{x = s(60) - 3 * s.v.tile.border, y = 1.5 * s.v.tile.border},
+              color = color.s.blue.deep
+            }
+          }
         },
         component:create_triangle{
           pos = vec2d{x = s(60), y = s(60)},
@@ -198,10 +286,9 @@ function love.load()
           color = color(0, 0, 0),
           children = {
             component:create_triangle{
-              pos = vec2d{x = s(-1), y = s(-1)},
-              p1 = vec2d(),
-              p2 = vec2d{x = s(-28), y = s(-28)},
-              p3 = vec2d{y = s(-56)},
+              p1 = vec2d{x = -s.v.tile.border, y = - 2 * s.v.tile.border},
+              p2 = vec2d{x = -(s(30) - 1.5 * s.v.tile.border), y = -s(30)},
+              p3 = vec2d{x = -1.5 * s.v.tile.border, y = -(s(60) - 3 * s.v.tile.border)},
               color = color.s.yellow.deep
             }
           }
@@ -211,9 +298,14 @@ function love.load()
           p1 = vec2d(), 
           p2 = vec2d{x = s(-30), y = s(-30)}, 
           p3 = vec2d{x = s(-60)},
-          color = color.s.green.deep,
+          color = color(0, 0, 0),
           children = {
-
+            component:create_triangle{
+              p1 = vec2d{x = -2 * s.v.tile.border, y = -s.v.tile.border},
+              p2 = vec2d{x = -s(30), y = -(s(30) - 1.5 * s.v.tile.border)},
+              p3 = vec2d{x = -(s(60) - 3 * s.v.tile.border), y = -1.5 * s.v.tile.border},
+              color = color.s.green.deep
+            }
           }
         },
       }
@@ -221,15 +313,24 @@ function love.load()
   end
   
   board = component:create{
-    pos = vec2d(),
-    width = s(300), height = s(300),
+    width = s(301), height = s(301),
+    color = color(0, 0, 0),
     children = {
-      tile_set,
-      base_create(vec2d{x = s(0), y = s(0)}, color.s.red),
-      base_create(vec2d{x = s(180), y = s(0)}, color.s.blue),
-      base_create(vec2d{x = s(0), y = s(180)}, color.s.green),
-      base_create(vec2d{x = s(180), y = s(180)}, color.s.yellow),
-      centre_structure(vec2d{x = s.v.base.outer.size, y = s.v.base.outer.size}),
+      component:create{
+        pos = vec2d{x = s.v.tile.border, y = s.v.tile.border},
+        color = color(0, 0, 0),
+        children = {
+          tile_set_vertical_top_create(vec2d{x = s.v.base.outer.size}, color.s.blue.deep),
+          tile_set_vertical_bottom_create(vec2d{x = s.v.base.outer.size, y = s.v.base.outer.size + 3 * s.v.tile.size}, color.s.green.deep),
+          tile_set_horizontal_left_create(vec2d{y = s.v.base.outer.size}, color.s.red.deep),
+          tile_set_horizontal_right_create(vec2d{x = s.v.base.outer.size + 3 * s.v.tile.size, y = s.v.base.outer.size},color.s.yellow.deep),
+          base_create(vec2d{x = s(0), y = s(0)}, color.s.red),
+          base_create(vec2d{x = s(180), y = s(0)}, color.s.blue),
+          base_create(vec2d{x = s(0), y = s(180)}, color.s.green),
+          base_create(vec2d{x = s(180), y = s(180)}, color.s.yellow),
+          centre_structure(vec2d{x = s.v.base.outer.size, y = s.v.base.outer.size})
+        }
+      }
     }
   }
 
