@@ -46,9 +46,14 @@ local function update_template_raw(s_node, template_node)
 end
 
 function color:set_template(template)
-  color.meta.error_handler:assert(
-    not is_color_table(template), 'TOP_LEVEL_COLOR_NODE'
-  )
+  if color.meta.error_handler then
+    color.meta.error_handler:assert(
+      not is_color_table(template), 'TOP_LEVEL_COLOR_NODE'
+    )
+  else
+    assert(not is_color_table(template), 'Top level node cannot be a color or empty.')
+  end
+
   update_template_raw(color, {s = template})
 end
 

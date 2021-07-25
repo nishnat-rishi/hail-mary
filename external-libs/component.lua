@@ -38,8 +38,7 @@ component.utils.collides = collides_vector
 ------------------------------------------------------------
 -- node level function
 function component:create(params)
-  params.color = params.color or {r = 1, g = 1, b = 1, a = 1}
-  return setmetatable({ -- as of now, no real use of setmetatable here
+  local node = setmetatable({ -- as of now, no real use of setmetatable here
     id = params.id or 'no_id',
     type = 'rect',
     pos = params.pos or vec2d(),
@@ -53,28 +52,49 @@ function component:create(params)
     children = params.children,
     draw_fn = component.draw_rectangle
   }, component)
+
+  node.color = node.color or {r = 1, g = 1, b = 1, a = 1}
+
+  return node
 end
 
 function component:create_texture(params)
-  params.color = params.color or {r = 1, g = 1, b = 1, a = 1}
-  return setmetatable({
+  local node = setmetatable({
     id = params.id or 'no_id',
     type = 'texture',
     pos = params.pos or vec2d(),
     effective_pos = params.effective_pos or vec2d(),
     width = params.width or 10,
     height = params.height or 10,
-    texture = params.texture,
+    texture = params.texture or 'assets/default.png',
+    quad = params.quad,
+    -- scale = ,
     collides = params.collides == nil and true or false,
     color = params.color,
     children = params.children,
     draw_fn = component.draw_texture
   }, component)
+
+  node.texture = love.graphics.newImage(node.texture)
+  local dim_x, dim_y = node.texture:getDimensions()
+
+  node.color = node.color or {r = 1, g = 1, b = 1, a = 1}
+  
+  if node.quad then
+    node.scale = node.scale or {x = node.width / (node.quad.width - node.quad.x), y = node.height / (node.quad.height - node.quad.y)}
+    node.quad = love.graphics.newQuad(
+      node.quad.x, node.quad.y, node.quad.width, node.quad.height, dim_x, dim_y
+    )
+  else
+    node.scale = node.scale or {x = node.width / dim_x, y = node.height / dim_y}
+    node.quad = love.graphics.newQuad(0, 0, dim_x, dim_y, dim_x, dim_y)
+  end
+
+  return node
 end
 
 function component:create_triangle(params)
-  params.color = params.color or {r = 1, g = 1, b = 1, a = 1}
-  return setmetatable({
+  local node = setmetatable({
     id = params.id or 'no_id',
     type = 'triangle',
     pos = params.pos or vec2d(),
@@ -89,6 +109,9 @@ function component:create_triangle(params)
     children = params.children,
     draw_fn = component.draw_triangle
   }, component)
+
+  node.color = node.color or {r = 1, g = 1, b = 1, a = 1}
+  return node
 end
 
 local function copy_component_elements(node)
@@ -284,7 +307,7 @@ function component.draw_triangle(node)
 end
 
 function component.draw_texture(node)
-  love.graphics.draw(node.texture, node.effective_pos.x, node.effective_pos.y)
+  love.graphics.draw(node.texture, node.quad, node.effective_pos.x, node.effective_pos.y, 0, node.scale.x, node.scale.y)
 end
 
 ------------------------------------------------------------------
