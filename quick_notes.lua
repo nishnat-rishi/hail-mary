@@ -22,10 +22,15 @@
   code (at least at first glance on the side of the user, maybe later
   on on the side of the code as well (?)).
 
-  ----
+  [ ] In accordance with the above big change, something like an 
+  interchangeable usage of (x, y) and (pos) as well as (width, height),
+  (dim) would fit perhaps? something like:
+  function constructor(params)
+    ...
+      dim = vec2d{x = params.width, y = params.height},
+    ...
+  end
 
-  The above 3 are done I think. Let's think of some more stuff here.
-
-  
+  and subsequently we'll be using (dim) internally
 
 ]]
