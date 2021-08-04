@@ -25,6 +25,8 @@ function love.load()
   love.graphics.setBackgroundColor(1, 1, 1)
   love.window.setMode(700, 700)
 
+  -- allow_movement = false
+
   origin = vec2d{x = 50, y = 50}
   s.factor = 2
 
@@ -93,11 +95,11 @@ function love.load()
               children = {
                 component:create{ -- inner box
                   pos = vec2d{
-                    x = s.v.tile.border,
-                    y = s.v.tile.border
+                    x = 2 * s.v.tile.border,
+                    y = 2 * s.v.tile.border
                   },
-                  width = s.v.base.inner.size,
-                  height = s.v.base.inner.size,
+                  width = s.v.base.inner.size - 4 * s.v.tile.border,
+                  height = s.v.base.inner.size - 4 * s.v.tile.border,
                   color = base_color.shallow,
                   children = (function()
                     local val = {}
@@ -122,11 +124,20 @@ function love.load()
             
                     for i, vec in ipairs(coords) do
                       val[i] = component:create{
-                        pos = vec,
+                        pos = vec - vec2d{x = 2 * s.v.tile.border, y = 2 * s.v.tile.border},
                         width = s.v.base.inner.token,
                         height = s.v.base.inner.token,
-                        color = base_color.deep,
-                        rx = s.v.base.inner.token / 2
+                        color = color(0, 0, 0),
+                        rx = s.v.base.inner.token / 2,
+                        children = {
+                          component:create{
+                            pos = vec2d{x = 2 * s.v.tile.border, y = 2 * s.v.tile.border},
+                            width = s.v.base.inner.token - 4 * s.v.tile.border,
+                            height = s.v.base.inner.token - 4 * s.v.tile.border,
+                            color = base_color.deep,
+                            rx = (s.v.base.inner.token - 2 * s.v.tile.border) / 2
+                          }
+                        }
                       }
                     end
             
@@ -409,6 +420,7 @@ end
 
 function love.update(dt)
   error_handler:update(dt)
+  -- board:update_effectives(origin)
 end
 
 function love.draw()
@@ -417,3 +429,17 @@ function love.draw()
   
   board:draw()
 end
+
+-- function love.mousepressed()
+--   allow_movement = true
+-- end
+
+-- function love.mousemoved(x, y, dx, dy)
+--   if allow_movement then
+--     board.pos:update(board.pos + vec2d{x = dx, y = dy})
+--   end
+-- end
+
+-- function love.mousereleased()
+--   allow_movement = false
+-- end
